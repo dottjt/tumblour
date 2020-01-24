@@ -76,53 +76,73 @@ const savePostsPublished = async (client, blogName) => {
     let counter = 0;
 
     for (let period of offsetArray) {
-      const blogPostsResponsePeriod = await client.blogPosts(blogName, undefined, { offset: period.offset, type: 'photo' });
+      const blogPostsResponsePeriod = await client.blogPosts(blogName, undefined, { offset: period.offset });
 
       for (let post of blogPostsResponsePeriod.posts) {
-        const { postFields: { blog_name, slug, title, type }, postString } = processPost(post);
+        const { postFields: { blog_name, slug, type, tags, short_url}, postString } = processPost(post);
 
-        // This needs to change depending on whether it's an answer, text or photo.
-        const file = path.join(__dirname, '..', 'export', blog_name, 'posts', type, `${slug}.md`);
+        console.log(counter, slug, type);
+        counter++;
 
-        if (type === 'text' || type === 'answer') {
+        if (type === 'answer' || type === '') {
+          const file = path.join(__dirname, '..', 'export', blog_name, 'posts', type, `${slug}.md`);
           const fileExists = await fse.pathExists(file);
+
           if (!fileExists) {
             await fse.outputFile(file, postString);
           }
         }
+
         if (type === 'photo') {
-          await fse.outputFile(file, postString);
-          const photoUrl = post.photos[0].original_size.url;
+          let photoUrl;
+          let photoFile;
 
-          console.log(type);
-          console.log(photoUrl);
+          if (slug !== "") {
+            photoUrl = post.photos[0].original_size.url;
 
-          const photoUrlExtension = path.extname(photoUrl);
-          const photoFile = path.join(__dirname, '..', 'export', blog_name, 'posts', type, `${slug}${photoUrlExtension}`);
+            const photoUrlExtension = path.extname(photoUrl);
+            photoFile = path.join(__dirname, '..', 'export', blog_name, 'posts', type, `${slug}${photoUrlExtension}`);
+          } else {
+            const pageHtml = await axios.get(short_url);
+            const regex = /"image":"https:(.+)\.(jpg|jpeg|png)"/g;
+            const matchArray = pageHtml.data.match(regex);
+            photoUrl = matchArray[0].split("\"")[3];
+
+            const photoUrlExtension = path.extname(photoUrl);
+            const tagSlug = tags.join(',').replace(/,/g,'-');
+            photoFile = path.join(__dirname, '..', 'export', blog_name, 'posts', type, `${tagSlug}${photoUrlExtension}`);
+          }
+
+          const file = path.join(__dirname, '..', 'export', blog_name, 'posts', type, `${slug}.md`);
+          const fileExists = await fse.pathExists(file);
+
+          if (!fileExists) {
+            await fse.outputFile(file, postString);
+          }
+
 
           const photoExists = await fse.pathExists(photoFile);
+
           if (!photoExists) {
+
+            console.log(photoUrl);
+            console.log(photoFile);
+
             const writer = fs.createWriteStream(photoFile)
             const response = await axios({
-              photoUrl,
+              url: photoUrl,
               method: 'GET',
               responseType: 'stream'
             });
 
             response.data.pipe(writer);
 
-            return new Promise((resolve, reject) => {
+            new Promise((resolve, reject) => {
               writer.on('finish', resolve)
               writer.on('error', reject)
             });
           }
         }
-        if (type !== 'text' || type !== 'answer' || type !== 'photo') {
-          throw new Error(`savePostsPublished - type unknown - ${type}`);
-        }
-
-        console.log(counter, title);
-        counter++;
       }
     }
   } catch(error) {

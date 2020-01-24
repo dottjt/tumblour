@@ -46,7 +46,7 @@ const returnPostSpecificFields = (post) => {
 const returnPostSpecificBody = (postFields, postSpecificFields) => {
   switch (postFields.type) {
     case 'text':
-      return postFields.body
+      return postSpecificFields.body;
     case 'answer':
       let body;
       body += `User: ${postSpecificFields.asking_name}\n`;
