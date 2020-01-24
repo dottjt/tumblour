@@ -3,7 +3,7 @@ const {
 } = require('./util');
 
 const {
-  savePosts
+  savePosts,
 } = require('./posts');
 
 const saveBlogData = async (client) => {

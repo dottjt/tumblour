@@ -5,67 +5,95 @@ const axios = require('axios');
 
 const {
   generateOffsetArray,
-  returnPostSpecificFields,
-  returnPostSpecificBody,
-  returnPostHead,
+  processPost,
 } = require('./util');
 
-const formatPost = (postFields, postSpecificFields) => {
-  try {
-    const head = returnPostHead(postFields);
-    const body = returnPostSpecificBody(postFields, postSpecificFields);
+const outputFile = async (post, draftOrPost) => {
+  const {
+    postFields: {
+      blogName, slug, type, tags, shortUrl,
+    }, postString,
+  } = processPost(post);
 
-    return `${head}${body}`;
-  } catch(error) {
-    throw new Error(`formatPost - ${error}`);
+  if (type === 'answer' || type === 'text') {
+    const file = path.join(__dirname, '..', 'export', blogName, draftOrPost, type, `${slug}.md`);
+    const fileExists = await fse.pathExists(file);
+
+    if (!fileExists) {
+      await fse.outputFile(file, postString);
+    }
+  }
+
+  let photoUrl;
+  let photoFile;
+  let photoSlug;
+
+  if (type === 'photo') {
+    if (slug !== '') {
+      photoUrl = post.photos[0].original_size.url;
+
+      const photoUrlExtension = path.extname(photoUrl);
+      photoFile = path.join(__dirname, '..', 'export', blogName, draftOrPost, type, `${slug}${photoUrlExtension}`);
+      photoSlug = slug;
+    } else {
+      const pageHtml = await axios.get(shortUrl, {
+        responseType: 'arraybuffer',
+        reponseEncoding: 'binary',
+      });
+
+      const regex = /<meta property="og:image" content="https:(.+)\.(jpg|jpeg|png)" \/>/g;
+      const [matchArray] = pageHtml.data.toString('latin1').match(regex);
+      [,,, photoUrl] = matchArray.split('"');
+
+      const photoUrlExtension = path.extname(photoUrl);
+      photoSlug = tags.join(',').replace(/,/g, '-');
+      photoFile = path.join(__dirname, '..', 'export', blogName, draftOrPost, type, `${photoSlug}${photoUrlExtension}`);
+    }
+
+    const file = path.join(__dirname, '..', 'export', blogName, draftOrPost, type, `${photoSlug}.md`);
+    const fileExists = await fse.pathExists(file);
+
+    if (!fileExists) {
+      await fse.outputFile(file, postString);
+    }
+
+    const photoExists = await fse.pathExists(photoFile);
+
+    if (!photoExists) {
+      try {
+        const response = await axios({
+          url: photoUrl,
+          method: 'get',
+          responseType: 'stream',
+        });
+        response.data.pipe(fs.createWriteStream(photoFile));
+      } catch (error) {
+        throw new Error(`photoExists clause - ${error}`);
+      }
+    }
   }
 };
 
-const processPost = (post) => {
+const savePostsDraft = async (client, blogName) => {
   try {
-    const postFields = {
-      id: post.id,
-      blog_name: post.blog_name,
-      type: post.type,
-      title: post.title,
-      summary: post.summary,
-      date: post.date,
-      slug: post.slug,
-      state: post.state,
-      tags: post.tags,
-      short_url: post.short_url,
-      post_url: post.post_url,
-      note_count: post.note_count,
-      format: post.format
-    };
+    const getDrafts = (lastDraftId) => client.blogDrafts(
+      blogName, { before_id: lastDraftId/* , filter: 'raw' */ },
+    )
+      .then((resp) => {
+        if (resp.posts.length === 20) {
+          const nextLastDraftId = resp.posts[resp.posts.length - 1].id;
+          return getDrafts(nextLastDraftId).then((result) => resp.posts.concat(...result));
+        }
+        return resp.posts;
+      });
 
-    const postString = formatPost(postFields, returnPostSpecificFields(post));
-    return { postFields, postString };
-  } catch(error) {
-    throw new Error(`processPost - ${error}`);
+    const drafts = await getDrafts(0);
+
+    drafts.forEach((draft, index) => outputFile(draft, 'drafts', index));
+  } catch (error) {
+    throw new Error(`savePostsDraft - ${error}`);
   }
 };
-
-// const savePostsDraft = async (client, blogName) => {
-//   try {
-//     const blogDraftsResponse = await client.blogDrafts(blogName);
-//     const totalDrafts = blogDraftsResponse.total_posts;
-//     const offsetArray = generateOffsetArray(totalDrafts);
-
-//     for (let period of offsetArray) {
-//       const blogDraftsResponsePeriod = await client.blogDrafts(blogName, { limit: period.offset });
-
-//       for (let draft of blogDraftsResponsePeriod.posts) {
-//         const { postFields: { blog_name, slug, title } , postString } = processPost(draft);
-//         const file = `export/${blog_name}/drafts/${slug}.md`;
-//         await fse.outputFile(file, postString);
-//         console.log(`${title} exported! - ${file}`);
-//       }
-//     }
-//   } catch(error) {
-//     throw new Error(`savePostsDraft - ${error}`);
-//   }
-// };
 
 const savePostsPublished = async (client, blogName) => {
   try {
@@ -73,88 +101,23 @@ const savePostsPublished = async (client, blogName) => {
     const totalPosts = blogPostsResponse.total_posts;
     const offsetArray = generateOffsetArray(totalPosts);
 
-    let counter = 0;
+    const promises = offsetArray.map((p) => client.blogPosts(
+      blogName, { offset: p.offset/* , filter: 'raw' */ },
+    ));
+    const results = await Promise.all(promises);
+    const posts = results.reduce((acc, val) => acc.concat(val.posts), []);
 
-    for (let period of offsetArray) {
-      const blogPostsResponsePeriod = await client.blogPosts(blogName, undefined, { offset: period.offset });
-
-      for (let post of blogPostsResponsePeriod.posts) {
-        const { postFields: { blog_name, slug, type, tags, short_url}, postString } = processPost(post);
-
-        console.log(counter, slug, type);
-        counter++;
-
-        if (type === 'answer' || type === '') {
-          const file = path.join(__dirname, '..', 'export', blog_name, 'posts', type, `${slug}.md`);
-          const fileExists = await fse.pathExists(file);
-
-          if (!fileExists) {
-            await fse.outputFile(file, postString);
-          }
-        }
-
-        if (type === 'photo') {
-          let photoUrl;
-          let photoFile;
-
-          if (slug !== "") {
-            photoUrl = post.photos[0].original_size.url;
-
-            const photoUrlExtension = path.extname(photoUrl);
-            photoFile = path.join(__dirname, '..', 'export', blog_name, 'posts', type, `${slug}${photoUrlExtension}`);
-          } else {
-            const pageHtml = await axios.get(short_url);
-            const regex = /"image":"https:(.+)\.(jpg|jpeg|png)"/g;
-            const matchArray = pageHtml.data.match(regex);
-            photoUrl = matchArray[0].split("\"")[3];
-
-            const photoUrlExtension = path.extname(photoUrl);
-            const tagSlug = tags.join(',').replace(/,/g,'-');
-            photoFile = path.join(__dirname, '..', 'export', blog_name, 'posts', type, `${tagSlug}${photoUrlExtension}`);
-          }
-
-          const file = path.join(__dirname, '..', 'export', blog_name, 'posts', type, `${slug}.md`);
-          const fileExists = await fse.pathExists(file);
-
-          if (!fileExists) {
-            await fse.outputFile(file, postString);
-          }
-
-
-          const photoExists = await fse.pathExists(photoFile);
-
-          if (!photoExists) {
-
-            console.log(photoUrl);
-            console.log(photoFile);
-
-            const writer = fs.createWriteStream(photoFile)
-            const response = await axios({
-              url: photoUrl,
-              method: 'GET',
-              responseType: 'stream'
-            });
-
-            response.data.pipe(writer);
-
-            new Promise((resolve, reject) => {
-              writer.on('finish', resolve)
-              writer.on('error', reject)
-            });
-          }
-        }
-      }
-    }
-  } catch(error) {
+    posts.forEach((post, index) => outputFile(post, 'posts', index));
+  } catch (error) {
     throw new Error(`savePostsPublished - ${error}`);
   }
 };
 
 const savePosts = (client, blogName) => {
   savePostsPublished(client, blogName);
-  // savePostsDraft(client, blogName);
+  savePostsDraft(client, blogName);
 };
 
 module.exports = {
-  savePosts
+  savePosts,
 };
