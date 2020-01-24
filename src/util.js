@@ -31,17 +31,45 @@ const returnPostSpecificFields = (post) => {
         answer,
         question
       } = post;
-      return { answer, question }
+      return { asking_name, answer, question }
     default:
-      throw new Error('unknown post type');
+      throw new Error('returnPostSpecificBody - unknown post type');
   }
 }
+
+const returnPostSpecificBody = (postFields) => {
+  switch (postFields.type) {
+    case 'text':
+      return postFields.body
+    case 'answer':
+      let body;
+      body += `User: ${postSpecificFields.asking_name}\n`;
+      body += `Question: ${postSpecificFields.question}\n\n`;
+      body += `Answer: ${postSpecificFields.answer}\n\n`;
+      return body;
+    default:
+      throw new Error('returnPostSpecificBody - unknown post type');
+  }
+};
+
+const returnPostHead = (postFields) => {
+  const postFieldKeys = Object.keys(postFields);
+
+  const headInitial = '---\n';
+  const headBody = '';
+  const headEnd = '---\n\n';
+
+  postFieldKeys.forEach(postFieldKey => {
+    headBody += `${postFieldKey}: ${postFields[postFieldKey]} \n`;
+  });
+  return `${headInitial}${headBody}${headEnd}`;
+};
 
 const generateOffsetLimitArray = (totalAmount) => {
   const iterationsAmount = Math.ceil(totalAmount / 20);
   const iterationsArray = Array.from(Array(iterationsAmount).keys());
 
-  const { offsetLimitArray } = iterationsArray.reduce(iterationsArray, (acc, iterationNumber) => {
+  const { offsetLimitArray } = iterationsArray.reduce(iterationsArray, (acc) => {
     const newOffset = acc.offset + 20;
     const newLimit = acc.limit + 20;
     return {
@@ -49,15 +77,15 @@ const generateOffsetLimitArray = (totalAmount) => {
       limit: newLimit,
       offsetLimitArray: acc.offsetLimitArray.concat({ offset: newOffset, limit: newLimit })
     }
-  }, { offset: 0, limit: 20, offsetLimitArray: [] });
+  }, { offset: 0, limit: 20, offsetLimitArray: [{ offset: 0, limit: 20 }] });
 
   return offsetLimitArray;
 };
 
-
-
 module.exports = {
   createClient,
+  returnPostHead,
+  returnPostSpecificBody,
   returnPostSpecificFields,
   generateOffsetLimitArray,
 };
