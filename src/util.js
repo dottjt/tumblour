@@ -32,12 +32,18 @@ const returnPostSpecificFields = (post) => {
         question
       } = post;
       return { asking_name, answer, question }
+    case 'photo':
+      const {
+        image_permalink,
+        photos
+      } = post;
+      return { image_permalink, photos };
     default:
-      throw new Error('returnPostSpecificBody - unknown post type');
+      throw new Error(`returnPostSpecificFields - unknown post type: ${post.type}`);
   }
 }
 
-const returnPostSpecificBody = (postFields) => {
+const returnPostSpecificBody = (postFields, postSpecificFields) => {
   switch (postFields.type) {
     case 'text':
       return postFields.body
@@ -47,8 +53,10 @@ const returnPostSpecificBody = (postFields) => {
       body += `Question: ${postSpecificFields.question}\n\n`;
       body += `Answer: ${postSpecificFields.answer}\n\n`;
       return body;
+    case 'photo':
+      return { }
     default:
-      throw new Error('returnPostSpecificBody - unknown post type');
+      throw new Error(`returnPostSpecificBody - unknown post type: ${postFields.type}`);
   }
 };
 
@@ -56,36 +64,39 @@ const returnPostHead = (postFields) => {
   const postFieldKeys = Object.keys(postFields);
 
   const headInitial = '---\n';
-  const headBody = '';
+  let headBody = '';
   const headEnd = '---\n\n';
 
   postFieldKeys.forEach(postFieldKey => {
-    headBody += `${postFieldKey}: ${postFields[postFieldKey]} \n`;
+    headBody += `${postFieldKey}: "${postFields[postFieldKey]}"\n`;
   });
   return `${headInitial}${headBody}${headEnd}`;
 };
 
-const generateOffsetLimitArray = (totalAmount) => {
-  const iterationsAmount = Math.ceil(totalAmount / 20);
+const generateOffsetArray = (totalAmount) => {
+  const iterationsAmount = Math.floor(totalAmount / 20);
   const iterationsArray = Array.from(Array(iterationsAmount).keys());
 
-  const { offsetLimitArray } = iterationsArray.reduce(iterationsArray, (acc) => {
+  const { offsetArray } = iterationsArray.reduce((acc) => {
     const newOffset = acc.offset + 20;
-    const newLimit = acc.limit + 20;
     return {
       offset: newOffset,
-      limit: newLimit,
-      offsetLimitArray: acc.offsetLimitArray.concat({ offset: newOffset, limit: newLimit })
+      offsetArray: acc.offsetArray.concat({ offset: newOffset })
     }
-  }, { offset: 0, limit: 20, offsetLimitArray: [{ offset: 0, limit: 20 }] });
+  }, { offset: 20, offsetArray: [{ offset: 20 }] });
 
-  return offsetLimitArray;
+  return offsetArray;
 };
+
+const generate = () => {
+  const file = path.join(__dirname, '..', 'export', blog_name, 'posts', type, `${slug}.md`);
+
+}
 
 module.exports = {
   createClient,
   returnPostHead,
   returnPostSpecificBody,
   returnPostSpecificFields,
-  generateOffsetLimitArray,
+  generateOffsetArray,
 };
