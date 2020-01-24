@@ -1,18 +1,21 @@
-const { }
+const {
+  createClient,
+} = require('./util');
 
+const {
+  savePosts
+} = require('./posts');
 
-const getPosts = async () => {
+const saveBlogData = async (client) => {
   const userInfo = await client.userInfo();
+  const blogName = userInfo.user.blogs[0].name;
 
-  await client.blogPosts('blogName')
-    .then(function(resp) {
-      resp.posts;
-    })
-    .catch(function(err) {
-      // oops
-    });
-
-  // userInfo.user.blogs
-  // const blog.name
+  savePosts(client, blogName);
 };
 
+const main = () => {
+  const client = createClient();
+  saveBlogData(client);
+};
+
+main();
