@@ -85,7 +85,7 @@ const outputFile = (contentType, post, draftOrPost, index) => {
 
   const [dateString] = date.split(' ');
 
-  if (type === 'answer' || type === 'text' || type === 'quote') {
+  if (type === 'answer' || type === 'text' || type === 'quote' || type === 'link') {
     outputTextFile(contentType, postFields, postString, draftOrPost, dateString, index);
   }
 

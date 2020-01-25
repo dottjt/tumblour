@@ -88,6 +88,11 @@ const returnPostSpecificFields = (post) => {
         const { text } = post;
         return { text };
       }
+      case 'link': {
+        const { text } = post;
+        console.log(post);
+        return { text };
+      }
       default:
         throw new Error(`returnPostSpecificFields - unknown post type: ${post.type}`);
     }
@@ -116,6 +121,11 @@ const returnPostSpecificBody = (postFields, postSpecificFields) => {
       case 'quote': {
         const { text } = postSpecificFields;
         return text;
+      }
+      case 'link': {
+        const { text } = postSpecificFields;
+        console.log(text);
+        return { text };
       }
       default:
         throw new Error(`returnPostSpecificBody - unknown post type: ${postFields.type}`);

@@ -19,7 +19,9 @@ TODO:
 
 # Notes
 
-// I think SWEET_CHERRY_EROTICA is returning some 404s, I imagine because of the tumblr porn purge. That's okay, only the text was original.
+// I think SWEET_CHERRY_EROTICA drafts is returning some 404s, I imagine because of the tumblr porn purge. That's okay, only the text was original.
+
+// same for blackwhite ink curves drafts. Maybe have to look into it.
 
 # Emails
 
