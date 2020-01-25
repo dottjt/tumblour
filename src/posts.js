@@ -121,7 +121,7 @@ const savePostsPublished = async (client, blogName) => {
     const offsetArray = generateOffsetArray(totalPosts);
 
     const promises = offsetArray.map((p) => client.blogPosts(
-      blogName, { offset: p.offset/* , filter: 'raw' */ },
+      blogName, { offset: p.offset, filter: 'text' },
     ));
     const results = await Promise.all(promises);
     const posts = results.reduce((acc, val) => acc.concat(val.posts), []);
@@ -130,11 +130,6 @@ const savePostsPublished = async (client, blogName) => {
   } catch (error) {
     throw new Error(`savePostsPublished - ${error}`);
   }
-};
-
-const savePosts = (client, blogName) => {
-  savePostsPublished(client, blogName);
-  savePostsDraft(client, blogName);
 };
 
 module.exports = {

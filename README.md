@@ -21,7 +21,6 @@ julius@perspectivetheory.com - Fc1 - elegantly attached.
 
 juliusismyname@gmail.com - Fc1 - blackwhiteinkcurvesxxx.tumblr.com
 
-
 ## unused
 
 title.replace(/\s/g, "-")
