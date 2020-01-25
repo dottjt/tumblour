@@ -11,14 +11,14 @@ const saveBlogData = async (clientType, contentType) => {
   try {
     const client = createClient(clientType);
     const userInfo = await client.userInfo();
-    userInfo.user.blogs.forEach((blog) => console.log(blog.name));
+    // userInfo.user.blogs.forEach((blog) => console.log(blog.name));
     const blogName = userInfo.user.blogs[0].name;
 
     if (contentType === 'published') {
-      savePostsPublished(client, blogName);
+      savePostsPublished(client, blogName, contentType);
     }
     if (contentType === 'draft') {
-      savePostsDraft(client, blogName);
+      savePostsDraft(client, blogName, contentType);
     }
   } catch (error) {
     throw new Error(`saveBlogData - ${error}`);

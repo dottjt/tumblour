@@ -8,7 +8,7 @@ const {
   processPost,
 } = require('./util');
 
-const outputTextFile = async (postFields, postString, draftOrPost, dateString) => {
+const outputTextFile = async (contentType, postFields, postString, draftOrPost, dateString, index) => {
   const { blogName, slug, type } = postFields;
   if (type === 'answer' || type === 'text' || type === 'quote') {
     const file = path.join(__dirname, '..', 'export', blogName, draftOrPost, type, `${slug}-${dateString}.md`);
@@ -16,25 +16,24 @@ const outputTextFile = async (postFields, postString, draftOrPost, dateString) =
 
     if (!fileExists) {
       await fse.outputFile(file, postString);
+      console.log(`${blogName} - ${index} - ${contentType} - ${slug}-${dateString}.md`);
     }
   }
 };
 
-const outputPhotoFile = async (postFields, postString, draftOrPost, dateString) => {
+const outputPhotoFile = async (contentType, postFields, postString, draftOrPost, dateString, index) => {
   const {
     type, blogName, slug, tags, shortUrl, photoUrlFirst,
   } = postFields;
 
-  let photoUrl;
+  let photoUrl = photoUrlFirst;
   let photoFile;
-  let photoSlug;
+  let photoSlug = slug;
+
+  const photoUrlExtension = path.extname(photoUrl);
 
   if (slug !== '') {
-    photoUrl = photoUrlFirst;
-
-    const photoUrlExtension = path.extname(photoUrl);
     photoFile = path.join(__dirname, '..', 'export', blogName, draftOrPost, type, `${slug}-${dateString}${photoUrlExtension}`);
-    photoSlug = slug;
   } else {
     const pageHtml = await axios.get(shortUrl, {
       responseType: 'arraybuffer',
@@ -45,7 +44,6 @@ const outputPhotoFile = async (postFields, postString, draftOrPost, dateString) 
     const [matchArray] = pageHtml.data.toString('latin1').match(regex);
     [,,, photoUrl] = matchArray.split('"');
 
-    const photoUrlExtension = path.extname(photoUrl);
     photoSlug = tags.join(',').replace(/,/g, '-');
     photoFile = path.join(__dirname, '..', 'export', blogName, draftOrPost, type, `${photoSlug}-${dateString}${photoUrlExtension}`);
   }
@@ -67,13 +65,14 @@ const outputPhotoFile = async (postFields, postString, draftOrPost, dateString) 
         responseType: 'stream',
       });
       response.data.pipe(fs.createWriteStream(photoFile));
+      console.log(`${blogName} - ${index} - ${contentType} - ${photoSlug}-${dateString}${photoUrlExtension}`);
     } catch (error) {
       throw new Error(`photoExists clause - ${error}`);
     }
   }
 };
 
-const outputFile = (post, draftOrPost) => {
+const outputFile = (contentType, post, draftOrPost, index) => {
   const {
     postFields: {
       type, date,
@@ -85,15 +84,15 @@ const outputFile = (post, draftOrPost) => {
   const [dateString] = date.split(' ');
 
   if (type === 'answer' || type === 'text' || type === 'quote') {
-    outputTextFile(postFields, postString, draftOrPost, dateString);
+    outputTextFile(contentType, postFields, postString, draftOrPost, dateString, index);
   }
 
   if (type === 'photo') {
-    outputPhotoFile(postFields, postString, draftOrPost, dateString);
+    outputPhotoFile(contentType, postFields, postString, draftOrPost, dateString, index);
   }
 };
 
-const savePostsDraft = async (client, blogName) => {
+const savePostsDraft = async (client, blogName, contentType) => {
   try {
     const getDrafts = (lastDraftId) => client.blogDrafts(
       blogName, { before_id: lastDraftId/* , filter: 'raw' */ },
@@ -108,13 +107,13 @@ const savePostsDraft = async (client, blogName) => {
 
     const drafts = await getDrafts(0);
 
-    drafts.forEach((draft) => outputFile(draft, 'drafts'));
+    drafts.forEach((draft, index) => outputFile(contentType, draft, 'drafts', index));
   } catch (error) {
     throw new Error(`savePostsDraft - ${error}`);
   }
 };
 
-const savePostsPublished = async (client, blogName) => {
+const savePostsPublished = async (client, blogName, contentType) => {
   try {
     const blogPostsResponse = await client.blogPosts(blogName);
     const totalPosts = blogPostsResponse.total_posts;
@@ -126,7 +125,7 @@ const savePostsPublished = async (client, blogName) => {
     const results = await Promise.all(promises);
     const posts = results.reduce((acc, val) => acc.concat(val.posts), []);
 
-    posts.forEach((post) => outputFile(post, 'posts'));
+    posts.forEach((post, index) => outputFile(contentType, post, 'posts', index));
   } catch (error) {
     throw new Error(`savePostsPublished - ${error}`);
   }
