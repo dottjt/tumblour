@@ -1,5 +1,22 @@
 require('dotenv').config();
 const tumblr = require('tumblr.js');
+const winston = require('winston');
+
+const createLogger = () => {
+  winston.createLogger({
+    level: 'info',
+    format: winston.format.json(),
+    defaultMeta: { service: 'user-service' },
+    transports: [
+      //
+      // - Write all logs with level `error` and below to `error.log`
+      // - Write all logs with level `info` and below to `combined.log`
+      //
+      new winston.transports.File({ filename: 'error.log', level: 'error' }),
+      new winston.transports.File({ filename: 'combined.log' }),
+    ],
+  });
+};
 
 const createClient = (type) => {
   try {
@@ -68,8 +85,8 @@ const returnPostSpecificFields = (post) => {
         return { imagePermalink, photos };
       }
       case 'quote': {
-        const { quote } = post;
-        return { quote };
+        const { text } = post;
+        return { text };
       }
       default:
         throw new Error(`returnPostSpecificFields - unknown post type: ${post.type}`);
@@ -86,8 +103,8 @@ const returnPostSpecificBody = (postFields, postSpecificFields) => {
         return postSpecificFields.body;
       }
       case 'answer': {
-        let body;
-        body += `User: ${postSpecificFields.askingName}\n`;
+        let body = '';
+        body += `User: ${postSpecificFields.askingName}\n\n`;
         body += `Question: ${postSpecificFields.question}\n\n`;
         body += `Answer: ${postSpecificFields.answer}\n\n`;
         return body;
@@ -97,10 +114,9 @@ const returnPostSpecificBody = (postFields, postSpecificFields) => {
         return postUrl;
       }
       case 'quote': {
-        const { quote } = postFields;
-        return quote;
+        const { text } = postSpecificFields;
+        return text;
       }
-
       default:
         throw new Error(`returnPostSpecificBody - unknown post type: ${postFields.type}`);
     }
@@ -168,7 +184,7 @@ const processPost = (post) => {
       ...(post.type === 'photo' ? { photoUrlFirst: post.photos[0].original_size.url } : {}),
     };
 
-    const postString = formatPost(postFields, returnPostSpecificFields(post));
+    const postString = formatPost(postFields, returnPostSpecificFields(post)).replace(/\n\s+/g, '\n\n');
     return { postFields, postString };
   } catch (error) {
     throw new Error(`processPost - ${error}`);
@@ -176,6 +192,7 @@ const processPost = (post) => {
 };
 
 module.exports = {
+  createLogger,
   createClient,
   processPost,
   generateOffsetArray,

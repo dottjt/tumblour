@@ -8,20 +8,22 @@ const {
   processPost,
 } = require('./util');
 
-const outputTextFile = async (contentType, postFields, postString, draftOrPost, dateString, index) => {
+const outputTextFile = async (
+  contentType, postFields, postString, draftOrPost, dateString, index,
+) => {
   const { blogName, slug, type } = postFields;
-  if (type === 'answer' || type === 'text' || type === 'quote') {
-    const file = path.join(__dirname, '..', 'export', blogName, draftOrPost, type, `${slug}-${dateString}.md`);
-    const fileExists = await fse.pathExists(file);
+  const file = path.join(__dirname, '..', 'export', blogName, draftOrPost, type, `${slug}-${dateString}.md`);
+  const fileExists = await fse.pathExists(file);
 
-    if (!fileExists) {
-      await fse.outputFile(file, postString);
-      console.log(`${blogName} - ${index} - ${contentType} - ${slug}-${dateString}.md`);
-    }
+  if (!fileExists) {
+    await fse.outputFile(file, postString);
+    console.log(`${blogName} - ${index} - ${contentType} - ${slug}-${dateString}.md`);
   }
 };
 
-const outputPhotoFile = async (contentType, postFields, postString, draftOrPost, dateString, index) => {
+const outputPhotoFile = async (
+  contentType, postFields, postString, draftOrPost, dateString, index,
+) => {
   const {
     type, blogName, slug, tags, shortUrl, photoUrlFirst,
   } = postFields;
@@ -95,7 +97,7 @@ const outputFile = (contentType, post, draftOrPost, index) => {
 const savePostsDraft = async (client, blogName, contentType) => {
   try {
     const getDrafts = (lastDraftId) => client.blogDrafts(
-      blogName, { before_id: lastDraftId/* , filter: 'raw' */ },
+      blogName, { before_id: lastDraftId, filter: 'text' },
     )
       .then((resp) => {
         if (resp.posts.length === 20) {
