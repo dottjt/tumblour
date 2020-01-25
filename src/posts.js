@@ -133,5 +133,6 @@ const savePostsPublished = async (client, blogName) => {
 };
 
 module.exports = {
-  savePosts,
+  savePostsDraft,
+  savePostsPublished,
 };
