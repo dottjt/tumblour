@@ -25,20 +25,23 @@ const saveBlogData = async (clientType, contentType) => {
 };
 
 const main = () => {
-  setTimeout(() => saveBlogData('INK_QUOTES', 'published'), 0);
-  setTimeout(() => saveBlogData('INK_QUOTES', 'draft'), 2000);
+  // NOTE: The key with these is to run them sequentially, with some comments out.
+  // Otherwise the API returns 429 errors, due to making too many requests.
 
-  setTimeout(() => saveBlogData('BROKEN_HEARTS_AND_FRACTURED_SMILES', 'published'), 4000);
-  setTimeout(() => saveBlogData('BROKEN_HEARTS_AND_FRACTURED_SMILES', 'draft'), 6000);
+  saveBlogData('INK_QUOTES', 'published');
+  saveBlogData('INK_QUOTES', 'draft');
 
-  setTimeout(() => saveBlogData('SWEET_CHERRY_EROTICA', 'published'), 8000);
-  setTimeout(() => saveBlogData('SWEET_CHERRY_EROTICA', 'draft'), 10000);
+  saveBlogData('BROKEN_HEARTS_AND_FRACTURED_SMILES', 'published');
+  saveBlogData('BROKEN_HEARTS_AND_FRACTURED_SMILES', 'draft');
 
-  setTimeout(() => saveBlogData('ELEGANTLY_ATTACHED', 'published'), 12000);
-  setTimeout(() => saveBlogData('ELEGANTLY_ATTACHED', 'draft'), 14000);
+  saveBlogData('SWEET_CHERRY_EROTICA', 'published');
+  saveBlogData('SWEET_CHERRY_EROTICA', 'draft');
 
-  setTimeout(() => saveBlogData('BLACK_WHITE_INK_CURVES', 'published'), 16000);
-  setTimeout(() => saveBlogData('BLACK_WHITE_INK_CURVES', 'draft'), 18000);
+  saveBlogData('ELEGANTLY_ATTACHED', 'published');
+  saveBlogData('ELEGANTLY_ATTACHED', 'draft');
+
+  saveBlogData('BLACK_WHITE_INK_CURVES', 'published');
+  saveBlogData('BLACK_WHITE_INK_CURVES', 'draft');
 };
 
 main();
