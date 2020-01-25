@@ -1,78 +1,111 @@
 require('dotenv').config();
 const tumblr = require('tumblr.js');
 
-const createClient = () => {
-  // console.log(process.env.INK_QUOTES_CONSUMER_KEY);
-  // console.log(process.env.INK_QUOTES_CONSUMER_SECRET);
-  // console.log(process.env.INK_QUOTES_TOKEN);
-  // console.log(process.env.INK_QUOTES_TOKEN_SECRET);
+const createClient = (type) => {
+  try {
+    let token;
+    let tokenSecret;
+    switch (type) {
+      case 'INK_QUOTES':
+        token = process.env.INK_QUOTES_TOKEN;
+        tokenSecret = process.env.INK_QUOTES_TOKEN_SECRET;
+        break;
+      case 'BROKEN_HEARTS_AND_FRACTURED_SMILES':
+        token = process.env.BROKEN_HEARTS_AND_FRACTURED_SMILES_TOKEN;
+        tokenSecret = process.env.BROKEN_HEARTS_AND_FRACTURED_SMILES_TOKEN_SECRET;
+        break;
+      case 'BLACK_WHITE_INK_CURVES':
+        token = process.env.BLACK_WHITE_INK_CURVES_TOKEN;
+        tokenSecret = process.env.BLACK_WHITE_INK_CURVES_TOKEN_SECRET;
+        break;
+      case 'SWEET_CHERRY_EROTICA':
+        token = process.env.SWEET_CHERRY_EROTICA_TOKEN;
+        tokenSecret = process.env.SWEET_CHERRY_EROTICA_TOKEN_SECRET;
+        break;
+      case 'ELEGANTLY_ATTACHED':
+        token = process.env.ELEGANTLY_ATTACHED_TOKEN;
+        tokenSecret = process.env.ELEGANTLY_ATTACHED_TOKEN_SECRET;
+        break;
+      default: throw new Error(`createClient - unknown type: ${type}`);
+    }
 
-  const client = tumblr.createClient({
-    credentials: {
-      consumer_key: process.env.INK_QUOTES_CONSUMER_KEY,
-      consumer_secret: process.env.INK_QUOTES_CONSUMER_SECRET,
-      token: process.env.INK_QUOTES_TOKEN,
-      token_secret: process.env.INK_QUOTES_TOKEN_SECRET,
-    },
-    returnPromises: true,
-  });
+    const client = tumblr.createClient({
+      credentials: {
+        consumer_key: process.env.CONSUMER_KEY,
+        consumer_secret: process.env.CONSUMER_SECRET,
+        token,
+        token_secret: tokenSecret,
+      },
+      returnPromises: true,
+    });
 
-  return client;
+    return client;
+  } catch (error) {
+    throw new Error(`createClient - ${error}`);
+  }
 };
 
 const returnPostSpecificFields = (post) => {
-  switch (post.type) {
-    case 'text': {
-      const { body } = post;
-      return { body };
+  try {
+    switch (post.type) {
+      case 'text': {
+        const { body } = post;
+        return { body };
+      }
+      case 'answer': {
+        const {
+          asking_name: askingName,
+          answer,
+          question,
+        } = post;
+        return { askingName, answer, question };
+      }
+      case 'photo': {
+        const {
+          image_permalink: imagePermalink,
+          photos,
+        } = post;
+        return { imagePermalink, photos };
+      }
+      case 'quote': {
+        const { quote } = post;
+        return { quote };
+      }
+      default:
+        throw new Error(`returnPostSpecificFields - unknown post type: ${post.type}`);
     }
-    case 'answer': {
-      const {
-        asking_name: askingName,
-        answer,
-        question,
-      } = post;
-      return { askingName, answer, question };
-    }
-    case 'photo': {
-      const {
-        image_permalink: imagePermalink,
-        photos,
-      } = post;
-      return { imagePermalink, photos };
-    }
-    case 'quote': {
-      const { quote } = post;
-      return { quote };
-    }
-    default:
-      throw new Error(`returnPostSpecificFields - unknown post type: ${post.type}`);
+  } catch (error) {
+    throw new Error(`returnPostSpecificFields - ${error}`);
   }
 };
 
 const returnPostSpecificBody = (postFields, postSpecificFields) => {
-  switch (postFields.type) {
-    case 'text': {
-      return postSpecificFields.body;
-    }
-    case 'answer': {
-      let body;
-      body += `User: ${postSpecificFields.asking_name}\n`;
-      body += `Question: ${postSpecificFields.question}\n\n`;
-      body += `Answer: ${postSpecificFields.answer}\n\n`;
-      return body;
-    }
-    case 'photo': {
-      const { postUrl } = postFields;
-      return postUrl;
-    }
-    case 'quote': {
-      const { quote } = postFields;
-      return quote;
-    }
+  try {
+    switch (postFields.type) {
+      case 'text': {
+        return postSpecificFields.body;
+      }
+      case 'answer': {
+        let body;
+        body += `User: ${postSpecificFields.askingName}\n`;
+        body += `Question: ${postSpecificFields.question}\n\n`;
+        body += `Answer: ${postSpecificFields.answer}\n\n`;
+        return body;
+      }
+      case 'photo': {
+        const { postUrl } = postFields;
+        return postUrl;
+      }
+      case 'quote': {
+        const { quote } = postFields;
+        return quote;
+      }
 
-    default:
-      throw new Error(`returnPostSpecificBody - unknown post type: ${postFields.type}`);
+      default:
+        throw new Error(`returnPostSpecificBody - unknown post type: ${postFields.type}`);
+    }
+  } catch (error) {
+    throw new Error(`returnPostSpecificBody - ${error}`);
   }
 };
 
@@ -132,6 +165,7 @@ const processPost = (post) => {
       postUrl: post.post_url,
       noteCount: post.note_count,
       format: post.format,
+      ...(post.type === 'photo' ? { photoUrlFirst: post.photos[0].original_size.url } : {}),
     };
 
     const postString = formatPost(postFields, returnPostSpecificFields(post));

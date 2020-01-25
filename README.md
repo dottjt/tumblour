@@ -1,4 +1,25 @@
-# cake is great.
+# Tumblour
+
+Essentially this is an export of all my tumblr writing, including drafts.
+
+It contains text from:
+
+INK_QUOTES
+BROKEN_HEARTS_AND_FRACTURED_SMILES
+SWEET_CHERRY_EROTICA
+ELEGANTLY_ATTACHED
+BLACK_WHITE_INK_CURVES
+
+Couldn't figure out the email yet for tktxtktx.
+
+# Emails
+
+thefinancialreality@gmail.com - Fc1 - InkQuotes
+julius.reade@gmail.com - Fc1 - brokenheartsandfracturedsmiles
+drudgereportreport@gmail.com - Fc1 - sweetcherryerotica
+julius@perspectivetheory.com - Fc1 - elegantly attached.
+
+juliusismyname@gmail.com - Fc1 - blackwhiteinkcurvesxxx.tumblr.com
 
 
 ## unused
@@ -24,3 +45,17 @@ https://stackoverflow.com/questions/47117218/fetching-all-stripe-customers-with-
 //   return getThem(0);
 // };
 
+
+
+// return fse.pathExists(file)
+// .then(fileExists => {
+//   if (!fileExists) {
+//     return fse.outputFile(file, postString);
+//   }
+// })
+
+
+// for (const post of posts) {
+//   outputFile(post, 'posts');
+//   console.log(post.title);
+// }

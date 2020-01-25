@@ -8,69 +8,88 @@ const {
   processPost,
 } = require('./util');
 
-const outputFile = async (post, draftOrPost) => {
-  const {
-    postFields: {
-      blogName, slug, type, tags, shortUrl,
-    }, postString,
-  } = processPost(post);
-
-  if (type === 'answer' || type === 'text') {
-    const file = path.join(__dirname, '..', 'export', blogName, draftOrPost, type, `${slug}.md`);
+const outputTextFile = async (postFields, postString, draftOrPost, dateString) => {
+  const { blogName, slug, type } = postFields;
+  if (type === 'answer' || type === 'text' || type === 'quote') {
+    const file = path.join(__dirname, '..', 'export', blogName, draftOrPost, type, `${slug}-${dateString}.md`);
     const fileExists = await fse.pathExists(file);
 
     if (!fileExists) {
       await fse.outputFile(file, postString);
     }
   }
+};
+
+const outputPhotoFile = async (postFields, postString, draftOrPost, dateString) => {
+  const {
+    type, blogName, slug, tags, shortUrl, photoUrlFirst,
+  } = postFields;
 
   let photoUrl;
   let photoFile;
   let photoSlug;
 
-  if (type === 'photo') {
-    if (slug !== '') {
-      photoUrl = post.photos[0].original_size.url;
+  if (slug !== '') {
+    photoUrl = photoUrlFirst;
 
-      const photoUrlExtension = path.extname(photoUrl);
-      photoFile = path.join(__dirname, '..', 'export', blogName, draftOrPost, type, `${slug}${photoUrlExtension}`);
-      photoSlug = slug;
-    } else {
-      const pageHtml = await axios.get(shortUrl, {
-        responseType: 'arraybuffer',
-        reponseEncoding: 'binary',
+    const photoUrlExtension = path.extname(photoUrl);
+    photoFile = path.join(__dirname, '..', 'export', blogName, draftOrPost, type, `${slug}-${dateString}${photoUrlExtension}`);
+    photoSlug = slug;
+  } else {
+    const pageHtml = await axios.get(shortUrl, {
+      responseType: 'arraybuffer',
+      reponseEncoding: 'binary',
+    });
+
+    const regex = /<meta property="og:image" content="https:(.+)\.(jpg|jpeg|png)" \/>/g;
+    const [matchArray] = pageHtml.data.toString('latin1').match(regex);
+    [,,, photoUrl] = matchArray.split('"');
+
+    const photoUrlExtension = path.extname(photoUrl);
+    photoSlug = tags.join(',').replace(/,/g, '-');
+    photoFile = path.join(__dirname, '..', 'export', blogName, draftOrPost, type, `${photoSlug}-${dateString}${photoUrlExtension}`);
+  }
+
+  const file = path.join(__dirname, '..', 'export', blogName, draftOrPost, type, `${photoSlug}-${dateString}.md`);
+  const fileExists = await fse.pathExists(file);
+
+  if (!fileExists) {
+    await fse.outputFile(file, postString);
+  }
+
+  const photoExists = await fse.pathExists(photoFile);
+
+  if (!photoExists) {
+    try {
+      const response = await axios({
+        url: photoUrl,
+        method: 'get',
+        responseType: 'stream',
       });
-
-      const regex = /<meta property="og:image" content="https:(.+)\.(jpg|jpeg|png)" \/>/g;
-      const [matchArray] = pageHtml.data.toString('latin1').match(regex);
-      [,,, photoUrl] = matchArray.split('"');
-
-      const photoUrlExtension = path.extname(photoUrl);
-      photoSlug = tags.join(',').replace(/,/g, '-');
-      photoFile = path.join(__dirname, '..', 'export', blogName, draftOrPost, type, `${photoSlug}${photoUrlExtension}`);
+      response.data.pipe(fs.createWriteStream(photoFile));
+    } catch (error) {
+      throw new Error(`photoExists clause - ${error}`);
     }
+  }
+};
 
-    const file = path.join(__dirname, '..', 'export', blogName, draftOrPost, type, `${photoSlug}.md`);
-    const fileExists = await fse.pathExists(file);
+const outputFile = (post, draftOrPost) => {
+  const {
+    postFields: {
+      type, date,
+    },
+    postFields,
+    postString,
+  } = processPost(post);
 
-    if (!fileExists) {
-      await fse.outputFile(file, postString);
-    }
+  const [dateString] = date.split(' ');
 
-    const photoExists = await fse.pathExists(photoFile);
+  if (type === 'answer' || type === 'text' || type === 'quote') {
+    outputTextFile(postFields, postString, draftOrPost, dateString);
+  }
 
-    if (!photoExists) {
-      try {
-        const response = await axios({
-          url: photoUrl,
-          method: 'get',
-          responseType: 'stream',
-        });
-        response.data.pipe(fs.createWriteStream(photoFile));
-      } catch (error) {
-        throw new Error(`photoExists clause - ${error}`);
-      }
-    }
+  if (type === 'photo') {
+    outputPhotoFile(postFields, postString, draftOrPost, dateString);
   }
 };
 
@@ -89,7 +108,7 @@ const savePostsDraft = async (client, blogName) => {
 
     const drafts = await getDrafts(0);
 
-    drafts.forEach((draft, index) => outputFile(draft, 'drafts', index));
+    drafts.forEach((draft) => outputFile(draft, 'drafts'));
   } catch (error) {
     throw new Error(`savePostsDraft - ${error}`);
   }
@@ -107,7 +126,7 @@ const savePostsPublished = async (client, blogName) => {
     const results = await Promise.all(promises);
     const posts = results.reduce((acc, val) => acc.concat(val.posts), []);
 
-    posts.forEach((post, index) => outputFile(post, 'posts', index));
+    posts.forEach((post) => outputFile(post, 'posts'));
   } catch (error) {
     throw new Error(`savePostsPublished - ${error}`);
   }
