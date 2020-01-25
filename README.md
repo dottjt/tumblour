@@ -4,27 +4,30 @@ Essentially this is an export of all my tumblr writing, including drafts.
 
 It contains text from:
 
-INK_QUOTES
-BROKEN_HEARTS_AND_FRACTURED_SMILES
-SWEET_CHERRY_EROTICA
-ELEGANTLY_ATTACHED
-BLACK_WHITE_INK_CURVES
+- INK_QUOTES
+- BROKEN_HEARTS_AND_FRACTURED_SMILES
+- SWEET_CHERRY_EROTICA
+- ELEGANTLY_ATTACHED
+- BLACK_WHITE_INK_CURVES
 
 Couldn't figure out the email yet for tktxtktx.
 
 TODO:
 
-// Still need to configure 'link' post types. I think there's just one existing. 
+// Still need to configure 'link' post types. I think there's just one existing.
 // Some links apparently are returning 404.
+
+# Notes
+
+// I think SWEET_CHERRY_EROTICA is returning some 404s, I imagine because of the tumblr porn purge. That's okay, only the text was original.
 
 # Emails
 
-thefinancialreality@gmail.com - Fc1 - InkQuotes
-julius.reade@gmail.com - Fc1 - brokenheartsandfracturedsmiles
-drudgereportreport@gmail.com - Fc1 - sweetcherryerotica
-julius@perspectivetheory.com - Fc1 - elegantly attached.
-
-juliusismyname@gmail.com - Fc1 - blackwhiteinkcurvesxxx.tumblr.com
+- thefinancialreality@gmail.com - Fc1 - InkQuotes
+- julius.reade@gmail.com - Fc1 - brokenheartsandfracturedsmiles
+- drudgereportreport@gmail.com - Fc1 - sweetcherryerotica
+- julius@perspectivetheory.com - Fc1 - elegantly attached.
+- juliusismyname@gmail.com - Fc1 - blackwhiteinkcurvesxxx.tumblr.com
 
 ## unused
 
