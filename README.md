@@ -12,6 +12,11 @@ BLACK_WHITE_INK_CURVES
 
 Couldn't figure out the email yet for tktxtktx.
 
+TODO:
+
+// Still need to configure 'link' post types. I think there's just one existing. 
+// Some links apparently are returning 404.
+
 # Emails
 
 thefinancialreality@gmail.com - Fc1 - InkQuotes
