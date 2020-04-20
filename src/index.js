@@ -41,7 +41,10 @@ const main = () => {
   // saveBlogData('ELEGANTLY_ATTACHED', 'draft');
 
   // saveBlogData('BLACK_WHITE_INK_CURVES', 'published');
-  saveBlogData('BLACK_WHITE_INK_CURVES', 'draft');
+  // saveBlogData('BLACK_WHITE_INK_CURVES', 'draft');
+
+  saveBlogData('TKTXTKTX', 'published');
+  // saveBlogData('TKTXTKTX', 'draft');
 };
 
 main();

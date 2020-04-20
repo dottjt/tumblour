@@ -9,27 +9,48 @@ It contains text from:
 - SWEET_CHERRY_EROTICA
 - ELEGANTLY_ATTACHED
 - BLACK_WHITE_INK_CURVES
-
-Couldn't figure out the email yet for tktxtktx.
+- TKTXTKTX
 
 TODO:
 
 // Still need to configure 'link' post types. I think there's just one existing.
 // Some links apparently are returning 404.
 
+# ENV variables required
+
+INK_QUOTES_TOKEN
+INK_QUOTES_TOKEN_SECRET
+BROKEN_HEARTS_AND_FRACTURED_SMILES_TOKEN
+BROKEN_HEARTS_AND_FRACTURED_SMILES_TOKEN_SECRET
+BLACK_WHITE_INK_CURVES_TOKEN
+BLACK_WHITE_INK_CURVES_TOKEN_SECRET
+TKTXTKTX_TOKEN
+TKTXTKTX_TOKEN_SECRET
+SWEET_CHERRY_EROTICA_TOKEN
+SWEET_CHERRY_EROTICA_TOKEN_SECRET
+ELEGANTLY_ATTACHED_TOKEN
+ELEGANTLY_ATTACHED_TOKEN_SECRET
+CONSUMER_KEY
+CONSUMER_SECRET
+
+# How to run
+
+// `npm run dev`
+
 # Notes
 
 // I think SWEET_CHERRY_EROTICA drafts is returning some 404s, I imagine because of the tumblr porn purge. That's okay, only the text was original.
 
-// same for blackwhite ink curves drafts. Maybe have to look into it.
+// same for blackwhite ink curves drafts. May have to look into it.
 
 # Emails
 
-- thefinancialreality@gmail.com - Fc1 - InkQuotes
-- julius.reade@gmail.com - Fc1 - brokenheartsandfracturedsmiles
-- drudgereportreport@gmail.com - Fc1 - sweetcherryerotica
-- julius@perspectivetheory.com - Fc1 - elegantly attached.
-- juliusismyname@gmail.com - Fc1 - blackwhiteinkcurvesxxx.tumblr.com
+- thefinancialreality@gmail.com - InkQuotes
+- julius.reade@gmail.com - brokenheartsandfracturedsmiles
+- drudgereportreport@gmail.com - sweetcherryerotica
+- julius@perspectivetheory.com - elegantly attached.
+- juliusismyname@gmail.com - blackwhiteinkcurvesxxx.tumblr.com
+- julius@perspectivevsreality.com - tktxtktx.tumblr.com
 
 ## unused
 
@@ -53,7 +74,6 @@ https://stackoverflow.com/questions/47117218/fetching-all-stripe-customers-with-
 //   );
 //   return getThem(0);
 // };
-
 
 
 // return fse.pathExists(file)

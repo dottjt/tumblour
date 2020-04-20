@@ -35,6 +35,10 @@ const createClient = (type) => {
         token = process.env.BLACK_WHITE_INK_CURVES_TOKEN;
         tokenSecret = process.env.BLACK_WHITE_INK_CURVES_TOKEN_SECRET;
         break;
+      case 'TKTXTKTX':
+        token = process.env.TKTXTKTX_TOKEN;
+        tokenSecret = process.env.TKTXTKTX_TOKEN_SECRET;
+        break;
       case 'SWEET_CHERRY_EROTICA':
         token = process.env.SWEET_CHERRY_EROTICA_TOKEN;
         tokenSecret = process.env.SWEET_CHERRY_EROTICA_TOKEN_SECRET;
@@ -88,9 +92,13 @@ const returnPostSpecificFields = (post) => {
         const { text } = post;
         return { text };
       }
+      case 'audio': {
+        // TODO: No idea if this works.
+        const { text } = post;
+        return { text };
+      }
       case 'link': {
         const { text } = post;
-        console.log(post);
         return { text };
       }
       default:
@@ -127,8 +135,15 @@ const returnPostSpecificBody = (postFields, postSpecificFields) => {
         console.log(text);
         return { text };
       }
-      default:
+      case 'audio': {
+        // TODO: No idea if this works.
+        const { text } = postSpecificFields;
+        return { text };
+      }
+      default: {
+        console.log('yo', postFields.type, 'yo');
         throw new Error(`returnPostSpecificBody - unknown post type: ${postFields.type}`);
+      }
     }
   } catch (error) {
     throw new Error(`returnPostSpecificBody - ${error}`);
